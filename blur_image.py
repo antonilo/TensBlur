@@ -18,7 +18,7 @@ FILTER_SIZE = 13
 
 def smooth():
 
-    Image_Placeholder = tf.placeholder( tf.float32, shape = [1, None, None, None])
+    Image_Placeholder = tf.placeholder( tf.float32, shape = [1, None, None, 3])
     smoother = Smoother({'data':Image_Placeholder}, FILTER_SIZE, SIGMA)
     smoothed_image = smoother.get_output()
 
@@ -28,15 +28,11 @@ def smooth():
         sess.run(init)
         image = Image.open(FLAGS.image_path)
         image = np.array(image, dtype = np.float32)
-        if len(image.shape) == 2:
-            image = image.reshape((image.shape[0], image.shape[1], 1))
-        out_image = np.zeros_like(image)
-        for channel in xrange(image.shape[2]):
-          c_image = image[:,:,channel].reshape((1,image.shape[0], image.shape[1], 1))
-          smoothed = sess.run(smoothed_image,
-                              feed_dict = {Image_Placeholder: c_image})
-          smoothed = smoothed / np.max(smoothed)
-          out_image[:,:,channel] = np.squeeze(smoothed)
+        image = image.reshape((1, image.shape[0], image.shape[1], 3))
+        smoothed = sess.run(smoothed_image,
+                             feed_dict = {Image_Placeholder: image})
+        smoothed = smoothed / np.max(smoothed)
+        out_image = np.squeeze(smoothed)
 
         out_image = Image.fromarray(np.squeeze(np.uint8(out_image * 255)))
         out_image.show()
